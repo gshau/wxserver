@@ -1,6 +1,7 @@
 # ESP8266 driven weather station with Flask webserver frontend.
 
-There are two main components to this project.  The device source in esp8266/ and the webserver in app/.  Data on device can be accessed directly via:\ http://deviceIP
+There are two main components to this project.  The device source in esp8266/ and the webserver in app/.  Data on device can be accessed directly via:\
+http://deviceIP
 
 For debugging purposes, the device can have firmware uploaded directly from the webpage.  It's recommended that after deployment, this feature be removed for security.
 
@@ -10,7 +11,7 @@ Recommend platformio for compiling and distributing the esp8266 source to device
 Flask and SocketIO frontend to weather station.  It can accept multiple stations simultaneously.  
 
 To setup:\
-pip -r requirements
+$pip -r requirements
 
 To run:
 Run station receiver that pushes socketIO packets to flask webserver:\
