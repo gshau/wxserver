@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Home Conditions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.6">
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.0/socket.io.js"></script>
+    <LINK href="https://bootswatch.com/slate/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <!-- <script src="{{ url_for('static', filename='js/lib/jquery.bsAlerts.min.js')}}"></script> -->
+
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            namespace = '/web'; // change to an empty string to use the global namespace
+
+            // the socket.io documentation recommends sending an explicit package upon connection
+            // this is specially important when using the global namespace
+            var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+            $("#success-alert").hide();
+            // event handler for server sent data
+            // the data is displayed in the "Received" section of the page
+            socket.on('dataPacket', function(msg) {
+                console.log(msg.packet);
+                var parsedData= msg.packet;//JSON.parse(msg.packet);
+                console.log('from: '+parsedData.name);
+                var name = parsedData.name.replace(/ /g,'')
+                var text='';
+
+                var options = new Array();
+                $.each(parsedData.data, function(index, option) {
+                    if ((index != 'uptime') && (index != 'RSSsI')){
+                        options.push("<tr class='"+option.class+"'> <td class='col-md-4'><h6>" + index + "</h6></td> <td class='col-xs-8'> <h4>"+ option.value + " " + option.unit + "</h4></td></tr>");
+                            if (option.class == 'danger' || option.class == 'info'){
+                                console.log('options: ' + options);
+                                // console.log('test');
+                                $(document).trigger("add-alerts", [
+                                {
+                                  'message': name + " " + index + " is outside of bounds: "+ option.value,
+                                  'priority': option.class
+                                }
+                                ]);
+                            }
+                        }
+
+                });
+
+
+                // get total seconds between the times
+                var delta = parsedData['data']['uptime']['value'];
+                console.log(parsedData)
+
+                var days = Math.floor(delta / 86400);
+                delta -= days * 86400;
+                var hours = Math.floor(delta / 3600) % 24;
+                delta -= hours * 3600;
+                var minutes = Math.floor(delta / 60) % 60;
+                delta -= minutes * 60;
+                var seconds = Math.round(delta % 60,1);
+
+
+
+                uptimeString =
+                $('#'+name).html("<table class='table table-striped table-hover'><thead><tr><th>" + parsedData.name + " <br> uptime: " + days + "d " + hours + "h " + minutes + "m " + seconds + "s " +" </th><th>Value</th><th></th></tr></thead><tbody>" + options.join('')+ "</body></table>");
+
+                var nameIP = parsedData.name.replace(/ /g,'')+'IP'
+                var ipAddr = parsedData.network.ip
+                $('a[href="' + name + '"]').attr('href','http://'+ipAddr)
+
+
+            });
+
+            // event handler for new connections
+            socket.on('connect', function() {
+                socket.emit('my event', {data: 'I\'m connected!'});
+            });
+
+
+        });
+    </script>
+</head>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <!-- <a class="navbar-brand" href="#">Room Conditions</a> -->
+    </div>
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav ">
+        <li><a href="#" target="_blank">Ephemeris</a></li>
+        <li><a href="http://10.0.1.62:5006" target="_blank">Bokeh Plots</a></li>
+        <li><a href="http://www.ssec.wisc.edu/data/wisc/" target="_blank">Satellite</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Sensor pages <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+<!-- For every station sending data with name "Station Name", add following:
+<li><a href="StationName" target="_blank">Station Name</a></li>
+ -->
+            <li><a href="WeatherStation" target="_blank">Weather Station</a></li>
+          </ul>
+        </li>
+
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+</div>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="col-xs-12">
+
+        <div class="page-header"><h1>Conditions<h1></div>
+        <table class="table">
+            <tr>
+<!-- For every station sending data with name "Station Name", add following:
+<td class='col-xs-3'><div id="StationName"></div></td> -->
+                <td class='col-xs-3'><div id="WeatherStation"></div></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>
