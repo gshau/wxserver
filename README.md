@@ -43,6 +43,12 @@ http://localhost:5000/
 I'd recommend installing Influx and Grafana via docker for minimal headache.  Install docker here: `https://www.docker.com/`
 
 ###InfluxDB setup:
+Pull down the influxdb docker images:
+
+```
+docker pull influxdb
+```
+Then run the image as a container named influx.  The port forwarding is done from the container to your local machine.  
 ```
 docker run -d --name influx -p 8086:8086 -p 8083:8083 -v /local/machine/path/to/db:/var/lib/influxdb -e INFLUXDB_ADMIN_ENABLED=true influxdb
 ```
@@ -51,7 +57,10 @@ Navigate to http://localhost:8083 and create a database with name StationDB
 
 
 ###Grafana setup:
+As with Influx, pull down the docker image for grafana:
+
 ```
+docker pull grafana/grafana
 docker run -d --name grafana -p 3000:3000 grafana/grafana
 ```
 
