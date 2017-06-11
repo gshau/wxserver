@@ -57,8 +57,10 @@ docker run -d --name grafana -p 3000:3000 grafana/grafana
 
 Navigate to http://localhost:3000 and start creating Grafana dashboards for plotting and monitoring your data.
 
-An example json file of a sample dashboard is given in 
+An example json file of a sample dashboard is given in Grafana/sample.json
 
+
+![Alt text](/screenshots/Grafana.png?raw=true "Sample Grafana page")
 
 
 
