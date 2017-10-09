@@ -11,19 +11,24 @@ import datetime
 from crypt import *
 import numpy as np
 
+from influxdb import InfluxDBClient
+
+
+
 
 class Station:
     def __init__(self):
         self.name='Rpi'
         self.udpPort=8123
-        self.BUF_SIZE=1024
+        self.BUF_SIZE=2048
         self.packets={}
         self.packetMean={}
         self.nMeasurements={}
         self.lastUpdate={}
-        self.avgFreq=30
+#        self.avgFreq=30
         self.lastRelease=datetime.datetime.now()
-        # self.secret_key = '1234567890123456'
+	influxIP = '127.0.0.1'
+	self.client = InfluxDBClient(influxIP, 8086, 'admin', 'admin', 'stationDB')
 
 
 
@@ -64,52 +69,20 @@ class Station:
             print "Message from ", addr, " :", packet
         return packet
 
-    def checkForPacketRelease(self):
-        releasePacket=False
-        now=datetime.datetime.now()
-        releaseTime=0
-        if (now-self.lastRelease).seconds > self.avgFreq:
-            self.packetMean['timestamp']=time.time()
-
-            releasePacket=True
-            releaseTime=float(now.strftime("%s"))
-            self.lastRelease=now
-            timeString=now.strftime('%Y/%m/%d %H:%M:%S')
-            self.packetMean['timeString']=timeString
-            self.nMeasurements['timeString']=1
-            # reset packet list
-            for key in self.packets.keys():
-                self.packets[key]=[]
-
-
-        return (releasePacket,releaseTime)
-
-
-    def updateMeasurement(self, key, value):
-
-        if key not in self.lastUpdate.keys():
-            self.lastUpdate[key]=datetime.datetime.now()
-
-        self.lastUpdate[key]=datetime.datetime.now()
-        if key not in self.packets.keys():
-            self.packets[key]=value
-        self.packets[key]=np.append(self.packets[key],value)
-        self.packetMean[key] = np.mean(self.packets[key])
-        self.nMeasurements[key] = len(self.packets[key])
-
 
 #
-db=stationDB.DB('data.sdb','master')
+#db=stationDB.DB('/root/sio/data.sdb','master')
 s=Station()
 s.udpPort=9990
 s.startUDPListen('0.0.0.0',s.udpPort)
 
 sio=SocketIO('localhost', 5000)
-verbose=False
+verbose=True #False
 readPackets=True
 while readPackets:
     rawPacket=s.recvPacket(verbose)
-    print rawPacket
+    print 'raw Packet: ',rawPacket
+    print 'length packet: ', len(rawPacket)
     try:
         sio.emit('dataPacket', rawPacket)
         print 'sent packet'
@@ -119,15 +92,14 @@ while readPackets:
     # rawPacket['name']
 
     for dataName in rawPacket['data'].keys():
+	packet = rawPacket['name']
         key = rawPacket['name'].replace(' ','') + dataName.replace(' ','')
         value = rawPacket['data'][dataName]['value']
-        releasePacket=s.updateMeasurement(key,value)
-    releasePacket,releaseTime=s.checkForPacketRelease()
-    if releasePacket:
-        for (key,value) in s.packetMean.items():
-            print 'Updating db: ',key,' = ',value
-        db.addData(s.packetMean)
-        s.packetMean={}
+        print 'Updating db: ',key,' = ',value
+	now = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+	json_body = [{"measurement": dataName, "tags": {"host": packet},"time": now,"fields": {"value": value}}]
+	print json_body
+	s.client.write_points(json_body)
 
 
 s.sock.close()
