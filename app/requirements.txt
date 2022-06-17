@@ -10,7 +10,7 @@ influxdb==4.1.0
 itsdangerous==0.24
 Jinja2>=2.10.1
 MarkupSafe==0.23
-numpy==1.11.1
+numpy==1.21.0
 pandas==0.18.1
 python-dateutil==2.5.3
 python-engineio>=3.9.0
