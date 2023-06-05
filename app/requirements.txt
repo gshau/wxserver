@@ -1,6 +1,6 @@
 backports-abc==0.4
 bokeh==0.10.0
-certifi==2016.9.26
+certifi==2022.12.7
 click==6.6
 flask>=1.0.0
 Flask-SocketIO==2.7.1
